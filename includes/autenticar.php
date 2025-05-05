@@ -38,7 +38,7 @@ if($usuarioDb){
         exit;
     }else{
         // Se a senha estiver errada
-        $_SESSION['erro'] = 'Usuário ou senha inválidos.';
+        $_SESSION['erro'] = 'Senha inválidos.';
         header('Location: ../');
         exit;
     }

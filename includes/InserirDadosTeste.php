@@ -1,41 +1,28 @@
 <?php
-// Conectar ao banco de dados
 require_once 'db.php';
 
-// Inserir um Admin
-$usuarioAdmin = 'admin_teste';
-$senhaAdmin = password_hash('senha_admin', PASSWORD_DEFAULT); // Senha segura com hash
-$stmtAdmin = $pdo->prepare("INSERT INTO admin (usuario, senha) VALUES (?, ?)");
-$stmtAdmin->execute([$usuarioAdmin, $senhaAdmin]);
+try {
+    // Inserir turma
+    $stmt = $pdo->prepare("INSERT INTO turmas (nome, descricao, status) VALUES (?, ?, ?)");
+    $stmt->execute(['ingorg9', 'Turma de inglês organização G9', 'ativo']);
+    $idTurma = $pdo->lastInsertId();
 
-// Inserir um Professor
-$nomeProfessor = 'Professor Teste';
-$usuarioProfessor = 'professor_teste';
-$senhaProfessor = password_hash('senha_professor', PASSWORD_DEFAULT); // Senha segura com hash
-$statusProfessor = 'ativo'; // Status do professor
-$stmtProfessor = $pdo->prepare("INSERT INTO professor (nome, usuario, senha, status) VALUES (?, ?, ?, ?)");
-$stmtProfessor->execute([$nomeProfessor, $usuarioProfessor, $senhaProfessor, $statusProfessor]);
+    // Inserir admin (professor com nome "Admin")
+    $stmt = $pdo->prepare("INSERT INTO professor (nome, usuario, senha, status) VALUES (?, ?, ?, ?)");
+    $stmt->execute(['Admin', 'admin', password_hash('admin123', PASSWORD_DEFAULT), 'ativo']);
 
-// Inserir uma Turma (necessária para o Aluno)
-$nomeTurma = 'Turma de Teste';
-$descricaoTurma = 'Turma de teste para inclusão de alunos';
-$statusTurma = 'ativo'; // Status da turma
-$stmtTurma = $pdo->prepare("INSERT INTO turma (nome, descricao, status) VALUES (?, ?, ?)");
-$stmtTurma->execute([$nomeTurma, $descricaoTurma, $statusTurma]);
+    // Inserir professores Saulo e Henrique
+    $stmt->execute(['Saulo', 'saulo', password_hash('senha123', PASSWORD_DEFAULT), 'ativo']);
+    $stmt->execute(['Henrique', 'henrique', password_hash('senha123', PASSWORD_DEFAULT), 'ativo']);
 
-// Obter o ID da última turma inserida
-$idTurma = $pdo->lastInsertId();
+    // Inserir 3 alunos de teste
+    $stmtAluno = $pdo->prepare("INSERT INTO alunos (idTurma, matricula, nome, usuario, senha, status) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmtAluno->execute([$idTurma, '2023001', 'Aluno Teste 1', 'teste1', password_hash('senha1', PASSWORD_DEFAULT), 'ativo']);
+    $stmtAluno->execute([$idTurma, '2023002', 'Aluno Teste 2', 'teste2', password_hash('senha2', PASSWORD_DEFAULT), 'ativo']);
+    $stmtAluno->execute([$idTurma, '2023003', 'Aluno Teste 3', 'teste3', password_hash('senha3', PASSWORD_DEFAULT), 'ativo']);
 
-// Inserir um Aluno
-$nomeAluno = 'Aluno Teste';
-$usuarioAluno = 'aluno_teste';
-$senhaAluno = password_hash('senha_aluno', PASSWORD_DEFAULT); // Senha segura com hash
-$matriculaAluno = '2021001'; // Matrícula do aluno
-$statusAluno = 'ativo'; // Status do aluno
-$stmtAluno = $pdo->prepare("INSERT INTO aluno (idTurma, matricula, nome, usuario, senha, status) VALUES (?, ?, ?, ?, ?, ?)");
-$stmtAluno->execute([$idTurma, $matriculaAluno, $nomeAluno, $usuarioAluno, $senhaAluno, $statusAluno]);
-
-// Exibir sucesso
-echo "Dados de teste inseridos com sucesso!";
-
+    echo "Dados inseridos com sucesso.";
+} catch (PDOException $e) {
+    echo "Erro ao inserir dados: " . $e->getMessage();
+}
 ?>
