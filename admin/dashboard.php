@@ -11,5 +11,7 @@ verificar_permissao("admin");
 </head>
 <body>
     <h1> Página do ADM </h1>
+    <a href="professor.php">Gerenciar Professor</a>
+    
 </body>
 </html>
