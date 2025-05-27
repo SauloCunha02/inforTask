@@ -1,50 +1,80 @@
 <?php
 session_start();
 require_once 'db.php';
+
 // Obtendo os dados do formulário
 $usuario = $_POST['usuario'];
 $senha   = $_POST['senha'];
-$tipo    = $_POST['tipo']; // pode ser admin, professor, aluno
+$tipo    = $_POST['tipo']; // valores esperados: admin, professor, alunos
 
-$tabela = $tipo; // admin, aluno, professor
-$campoId = ($tipo === 'admin') ? 'idAdm' : "id{$tipo}";
-// Prepara a consulta para verificar o usuário no banco
-$stmt = $pdo->prepare("SELECT $campoId AS id, usuario, senha, status FROM $tabela WHERE usuario = ? LIMIT 1");
+// Corrigindo nome da tabela e coluna do ID conforme o tipo
+switch ($tipo) {
+    case 'admin':
+        $tabela = 'admin';
+        $campoId = 'idAdm';
+        $verificaStatus = false;
+        break;
+    case 'professor':
+        $tabela = 'professor';
+        $campoId = 'idProfessor';
+        $verificaStatus = true;
+        break;
+    case 'alunos': // valor vindo do formulário
+        $tabela = 'alunos'; // nome real da tabela no banco
+        $campoId = 'idAluno';
+        $verificaStatus = true;
+        break;
+    default:
+        $_SESSION['erro'] = 'Tipo de usuário inválido.';
+        header('Location: ../index.php');
+        exit;
+}
+
+// Prepara a consulta
+$query = "SELECT $campoId AS $campoId, usuario, nome, senha";
+$query .= $verificaStatus ? ", status" : "";
+$query .= " FROM $tabela WHERE usuario = ? LIMIT 1";
+$stmt = $pdo->prepare($query);
 $stmt->execute([$usuario]);
 $usuarioDb = $stmt->fetch();
 
-if($usuarioDb){
+if ($usuarioDb) {
     // Verifica a senha
-    if(password_verify($senha, $usuarioDb['senha'])){
-        // Verifica se o usuário está ativo (somente para aluno e professor)
-        if(($tipo == 'aluno' || $tipo == 'professor') && $usuarioDb['status'] !== 'ativo'){
-            // Se não estiver ativo, exibe a mensagem e redireciona para o login
+    if (password_verify($senha, $usuarioDb['senha'])) {
+
+        // Verifica se está ativo (aluno ou professor)
+        if($verificaStatus && $usuarioDb['status'] !== 'ativo'){
             $_SESSION['erro'] = 'Usuário não está ativo.';
-            header('Location:/index.php');
+            header('Location: ../index.php');
             exit;
         }
-        // Se estiver ativo, cria a sessão do usuário
+
+        // Login bem-sucedido: cria sessão
         $_SESSION['id'] = $usuarioDb['id'];
         $_SESSION['usuario'] = $usuarioDb['usuario'];
+        $_SESSION['nome'] = $usuarioDb['nome'];
         $_SESSION['tipo'] = $tipo;
-        // Redireciona conforme o tipo de usuário
-        if($tipo == 'admin'){
+
+        // Redireciona para a área correta
+        if ($tipo === 'admin') {
             header("Location: ../admin/dashboard.php");
-        }elseif($tipo == 'professor'){
+        } elseif ($tipo === 'professor') {
             header("Location: ../professor/dashboard.php");
-        }elseif($tipo == 'aluno'){
+        } elseif ($tipo === 'alunos') {
+            $_SESSION['tipo'] = 'alunos'; // exato como você está testando no dashboard
+
             header("Location: ../aluno/dashboard.php");
         }
         exit;
-    }else{
-        // Se a senha estiver errada
-        $_SESSION['erro'] = 'Senha inválidos.';
-        header('Location: ../');
-        exit;
+
+    } else {
+        $_SESSION['erro'] = 'Senha inválida.';
+       header('Location: ../index.php');
+       exit;
     }
 }else{
-    // Se o usuário não for encontrado no banco
     $_SESSION['erro'] = 'Usuário ou senha inválidos.';
-    header('Location: ../');
+    header('Location: ../index.php');
     exit;
 }
+?>

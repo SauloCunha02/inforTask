@@ -10,6 +10,5 @@ verificar_permissao("professor");
     <title>Professor</title>
 </head>
 <body>
-    <h1> Página do Professor </h1>
-</body>
+    <h1> Página do Professor </h1><p>Seja bem-vindo <?php echo $_SESSION['nome']; ?> </p>
 </html>

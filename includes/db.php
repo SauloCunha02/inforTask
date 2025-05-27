@@ -13,7 +13,6 @@
     ];
     try{
         $pdo = new PDO($dsn, $user, $pass, $options);
-        echo "sucesso!";
     }catch(PDOException $e){
         echo "Erro ao conectar ao Banco de dados!".$e->getMessage();
         exit;
